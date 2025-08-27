@@ -121,7 +121,7 @@ def system_prompt(df: pd.DataFrame, persona: str) -> str:
     Usa el perfil del dataset si el usuario pregunta por los datos; de lo contrario, responde con teoría,
     evidencia empírica general y razonamiento económico transparente.
 
-    Perfil del dataset (para contexto, NO hagas EDA ni gráficos):
+    Perfil del dataset (para contexto):
     {profile}
 
     Reglas:
@@ -151,7 +151,7 @@ def export_chat(history, kind="json"):
 # ----------------------------- SIDEBAR -----------------------------
 with st.sidebar:
     st.markdown("## ⚙️ Ajustes")
-    st.markdown("Configura el modelo y el contexto. (Sin EDA)")
+    st.markdown("Configura el modelo y el contexto.")
 
     groq_key = ensure_groq()
     groq_key = st.text_input("GROQ_API_KEY", value=groq_key, type="password",
@@ -175,14 +175,14 @@ with st.sidebar:
     seed = st.number_input("Seed", 0, 10_000, 42, 1)
 
     st.divider()
-    st.caption("Hecho con ❤️ • Streamlit + LangChain + Groq • Sin EDA en esta app")
+    st.caption("Hecho con ❤️ • Streamlit + LangChain + Groq ")
 
 # ----------------------------- DATA (solo para perfil de contexto) -----------------------------
 df = load_data(uploaded) if uploaded else generate_synthetic_data(num_days=rows, start_date=str(start), seed=seed)
 numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
 # ----------------------------- HEADER -----------------------------
-st.markdown("# 💼 EcoAgent Pro (Sin EDA)")
+st.markdown("💼 EcoAgent Pro ")
 kpi = quick_stats(df)
 c1, c2, c3, c4 = st.columns(4)
 with c1: st.metric("Filas", kpi.get("Filas", "-"))
@@ -290,7 +290,7 @@ with tab_chat:
 
 # ====== TAB TOOLS (Simuladores ligeros, locales) ======
 with tab_tools:
-    st.markdown("### 🛠️ Simuladores rápidos (offline, sin EDA)")
+    st.markdown("### 🛠️ Simuladores rápidos (offline)")
     sim1, sim2, sim3 = st.columns(3)
 
     with sim1:
