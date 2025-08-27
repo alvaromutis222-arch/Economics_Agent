@@ -108,7 +108,6 @@ def build_context_profile(df: pd.DataFrame):
     if num.empty:
         return "Sin métricas numéricas."
     desc = num.describe().T[["mean","std","min","max"]].round(3)
-    # texto compacto
     lines = []
     for c, row in desc.iterrows():
         lines.append(f"{c}: mean={row['mean']}, std={row['std']}, min={row['min']}, max={row['max']}")
@@ -121,14 +120,14 @@ def system_prompt(df: pd.DataFrame, persona: str) -> str:
     Usa el perfil del dataset si el usuario pregunta por los datos; de lo contrario, responde con teoría,
     evidencia empírica general y razonamiento económico transparente.
 
-    Perfil del dataset (para contexto):
+    Perfil del dataset (contexto):
     {profile}
 
     Reglas:
     - Si no hay cifras exactas, declara supuestos y rangos razonables.
     - Evita alucinaciones numéricas. Si calculas algo, indícalo.
-    - Ofrece pasos o marcos (IS–LM, AS–AD, regla de Taylor, Mundell-Fleming, etc.) cuando ayuden.
-    - Cuando te pidan escenarios, brinda impactos de 1° y 2° orden, y riesgos.
+    - Ofrece marcos (IS–LM, AS–AD, regla de Taylor, Mundell-Fleming, etc.) cuando ayuden.
+    - En escenarios, brinda impactos de 1° y 2° orden, y riesgos.
     """)
 
 def ensure_groq():
@@ -175,14 +174,13 @@ with st.sidebar:
     seed = st.number_input("Seed", 0, 10_000, 42, 1)
 
     st.divider()
-    st.caption("Hecho con ❤️ • Streamlit + LangChain + Groq ")
+    st.caption("Hecho con ❤️ • Streamlit + LangChain + Groq")
 
 # ----------------------------- DATA (solo para perfil de contexto) -----------------------------
 df = load_data(uploaded) if uploaded else generate_synthetic_data(num_days=rows, start_date=str(start), seed=seed)
-numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
 
 # ----------------------------- HEADER -----------------------------
-st.markdown("💼 EcoAgent Pro ")
+st.markdown("# 💼 EcoAgent Pro")
 kpi = quick_stats(df)
 c1, c2, c3, c4 = st.columns(4)
 with c1: st.metric("Filas", kpi.get("Filas", "-"))
@@ -206,7 +204,7 @@ with tab_chat:
         "un profesor de economía con ejemplos simples"
     ], index=0)
 
-    # Mensajes (burbuja)
+    # Render de historial (burbujas)
     if st.session_state["history"]:
         for msg in st.session_state["history"]:
             role = "Tú" if msg["role"] == "user" else "Agente"
@@ -227,7 +225,7 @@ with tab_chat:
         question = st.text_area(
             "Pregunta sobre economía (teoría, mercados, política monetaria/fiscal, comercio, finanzas corporativas, etc.)",
             height=120,
-            placeholder="Ej: ¿Qué efectos de 1° y 2° orden tendría subir la tasa en 100 pb en una economía abierta con tipo de cambio flexible?"
+            placeholder="Ej: ¿Qué efectos tendría subir la tasa en 100 pb en una economía abierta con tipo de cambio flexible?"
         )
         col_s1, col_s2, col_s3 = st.columns([1,1,2])
         with col_s1:
@@ -288,9 +286,9 @@ with tab_chat:
                 unsafe_allow_html=True
             )
 
-# ====== TAB TOOLS (Simuladores ligeros, locales) ======
+# ====== TAB TOOLS (Simuladores ligeros) ======
 with tab_tools:
-    st.markdown("### 🛠️ Simuladores rápidos (offline)")
+    st.markdown("### 🛠️ Simuladores rápidos")
     sim1, sim2, sim3 = st.columns(3)
 
     with sim1:
@@ -309,19 +307,19 @@ with tab_tools:
         st.metric(f"Nivel en {years} años", f"{future:.2f}")
 
     with sim3:
-        st.markdown("**💸 Dinámica Deuda/PIB (muy simplificada)**")
+        st.markdown("**💸 Dinámica Deuda/PIB (simplificada)**")
         debt0 = st.number_input("Deuda/PIB inicial (%)", value=60.0, step=1.0, key="debt0")
         r = st.number_input("Tasa interés efectiva (%)", value=5.0, step=0.25, key="r_eff")
         gdp = st.number_input("Crecimiento PIB (%)", value=3.0, step=0.25, key="g_eff")
         pb = st.number_input("Balance primario (% PIB)", value=-1.0, step=0.25, help=">0 superávit; <0 déficit", key="pb")
         years_d = st.number_input("Años horizonte", value=5, min_value=1, max_value=50, step=1, key="yrs_d")
-        # Aproximación: b_{t+1} ≈ b_t * (1 + r - g) + pb
+        # Aproximación: b_{t+1} ≈ b_t * (1 + r - g) - pb   (superávit reduce deuda)
         b = debt0
         for _ in range(int(years_d)):
-            b = b * (1 + (r - gdp)/100) - pb  # signo: superávit reduce deuda
+            b = b * (1 + (r - gdp)/100) - pb
         st.metric(f"Deuda/PIB en {int(years_d)} años", f"{b:.1f}%")
 
-    st.caption("Nota: modelos simplificados para intuición; no sustituyen análisis técnico completo.")
+    st.caption("Modelos simplificados para intuición; no sustituyen análisis técnico completo.")
 
 # ====== TAB AJUSTES ======
 with tab_settings:
